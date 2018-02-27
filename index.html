@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>snack</title>
+<script src="https://cdn.bootcss.com/jquery/3.1.0/jquery.min.js"></script>
+<style type="text/css">
+*{margin:0;padding:0;}
+.content{margin:50px auto;font-size:0px;}
+.content span{display:inline-block;width:50px;height:50px;border:1px solid #000;box-sizing:border-box;}
+span.snake{
+ background-color:red;
+}
+span.food{
+ background-color:blue;
+}
+</style>
+</head>
+<body>
+
+<div class="content">
+</div>
+
+
+<script type="text/javascript">
+/* 类 */
+function map(width,height){
+    var obj = new Object();
+    obj.width = width;
+    obj.height = height;
+    obj.draw = function(){
+        $('.content').width(this.width);
+        $('.content').height(this.height);
+        var x = this.width/50;
+        var y = this.height/50;
+        var total = x*y;
+        for(var i=0;i<total;i++){
+            $('.content').append("<span></span>");
+        }
+    }
+    return obj;
+}
+function food(x,y){
+    var obj = new Object();
+    obj.max = x*y-1;
+    obj.showFood = function(){
+        var rand = parseInt(Math.random()*(this.max+1));
+        $(".content span").removeClass("food");
+        $(".content span").eq(rand).addClass('food');
+    }
+    return obj;
+}
+function snake(x,y){
+    var obj = new Object();
+    obj.mapX = x;
+    obj.mapY = y;
+    obj.max = x*y-1;
+    obj.dir = 'up'; //移动方向
+    obj.local = []; //蛇的身体坐标
+    obj.die = false;
+    obj.init = function(){
+        this.local = [[1,7],[1,8],[1,9]]; //85,97,109
+        this.show();
+    }
+    obj.move = function(){
+        //整理坐标
+        var tou = [];
+        switch(this.dir){
+            case 'up':
+                tou[0] = this.local[0][0];
+                tou[1] = this.local[0][1]-1;
+                if(tou[1]<0){
+                    tou[1] = y-1;
+                }
+                break;
+            case 'down':
+                tou[0] = this.local[0][0];
+                tou[1] = this.local[0][1]+1;
+                if(tou[1]>(y-1)){
+                    tou[1] = 0;
+                }
+                break;
+            case 'left':
+                tou[0] = this.local[0][0]-1;
+                tou[1] = this.local[0][1];
+                if(tou[0]<0){
+                    tou[0] = x-1;
+                }
+                break;
+            case 'right':
+                tou[0] = this.local[0][0]+1;
+                tou[1] = this.local[0][1];
+                if(tou[0]>(x-1)){
+                    tou[0] = 0;
+                }
+                break;
+        }
+        this.local.unshift(tou);
+        this.local.pop();
+        //显示新的蛇坐标
+        this.show();
+        this.isdie();
+    }
+    obj.eat = function(){
+        this.local[(this.local.length)] = this.local[this.local.length-1];
+    }
+    obj.show = function(){
+        $(".content span").removeClass("snake");
+        for(var i=0;i<this.local.length;i++){
+            var index = this.local[i][1]*this.mapX+this.local[i][0];
+            $(".content span").eq(index).addClass('snake');
+        }
+    }
+    obj.isdie = function(){
+        for(var i=0;i<this.local.length;i++){
+            for(var j=0;j<this.local.length;j++){
+                if(i!=j){
+                    if(JSON.stringify(this.local[i])==JSON.stringify(this.local[j])){
+                        this.die = true;
+                    }
+                }
+            }
+        }
+    }
+    return obj;
+}
+
+/* 业务逻辑开始 */
+// 初始化地图
+var width = 600; //宽度
+var height = 500; //高度
+var x = width/50; //横坐标格子数
+var y = height/50; //纵坐标格子数
+m = new map(width,height);
+m.draw();
+// 随机显示食物
+f = new food(x,y)
+f.showFood();
+// 创建蛇
+var s = new snake(x,y);
+s.init();
+// 让蛇动起来
+var timer = setInterval(function(){
+    if(s.die){
+        window.clearInterval(timer);
+        alert("Game Over");
+    }
+    s.move()
+    if($('.content span.food').hasClass('snake')){
+        f.showFood();
+        s.eat();
+    }
+},300);
+
+// 键盘事件
+$(window).keydown(function(event){
+  switch(event.keyCode) {
+    case 38: //up
+        s.dir = 'up';
+        break;
+    case 40: //down
+        s.dir = 'down';
+        break;
+    case 37: //left
+        s.dir = 'left';
+        break;
+    case 39: //right
+        s.dir = 'right';
+        break;
+  }
+});
+
+</script>
+
+
+</body>
+</html>
